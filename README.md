@@ -35,7 +35,10 @@ Timer- und Smartcube-Integration orientieren sich an
 
 Im Vercel-Dashboard unter **Storage → Create Database → Neon** eine (kostenlose)
 Postgres-DB anlegen und mit dem Projekt verknüpfen — das setzt `DATABASE_URL`
-automatisch. Danach einmalig das Schema anlegen:
+automatisch. Das Schema legt die API beim ersten Request selbst an
+(idempotente `CREATE TABLE IF NOT EXISTS`); es ist kein manueller Schritt nötig.
+
+Optional lässt sich das Schema auch von Hand anlegen:
 
 ```bash
 cp .env.example .env       # DATABASE_URL eintragen (aus Vercel/Neon kopieren)

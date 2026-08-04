@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./_lib/db.js";
+import { ensureSchema } from "./_lib/schema.js";
 import { requireAuth } from "./_lib/auth.js";
 
 const VALID_PAIR = /^[A-X]{2}$/;
@@ -14,6 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAuth(req, res)) return;
 
   try {
+    await ensureSchema();
     if (req.method === "GET") return await listAlgsets(res);
     if (req.method === "POST") return await createAlgset(req, res);
     if (req.method === "DELETE") return await deleteAlgset(req, res);

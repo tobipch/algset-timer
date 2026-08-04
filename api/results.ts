@@ -1,11 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./_lib/db.js";
+import { ensureSchema } from "./_lib/schema.js";
 import { requireAuth } from "./_lib/auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAuth(req, res)) return;
 
   try {
+    await ensureSchema();
     if (req.method === "POST") return await saveResult(req, res);
     if (req.method === "DELETE") return await deleteResults(req, res);
     res.status(405).json({ error: "method not allowed" });
