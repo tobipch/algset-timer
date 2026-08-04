@@ -1,0 +1,22 @@
+body {
+  min-height: 100vh;
+}
+
+.noselect {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Alg strings everywhere */
+.alg {
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* sortable table headers in the overview */
+th.sortable {
+  cursor: pointer;
+  white-space: nowrap;
+}
+th.sortable:hover {
+  text-decoration: underline;
+}

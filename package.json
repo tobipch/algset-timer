@@ -1,0 +1,35 @@
+{
+  "name": "algset-timer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p api",
+    "setup-db": "node scripts/setup_db.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.13.1",
+    "btcube-web": "^1.1.5",
+    "cubing": "^0.63.3",
+    "exceljs": "^4.4.0",
+    "gan-web-bluetooth": "^3.0.2",
+    "pinia": "^2.2.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vercel/node": "^3.2.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "~5.5.0",
+    "vite": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
