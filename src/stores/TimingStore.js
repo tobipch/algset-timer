@@ -2,6 +2,7 @@ import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {algToMoveString} from '@/helpers/scramble_utils'
 import {speedRating} from '@/helpers/kolibri'
+import {trimmedMean, trimmedIndices} from '@/helpers/stats'
 import {useBluetoothCubeStore} from '@/stores/BluetoothCubeStore'
 import {useSettingsStore} from '@/stores/SettingsStore'
 import {useAlgsetStore} from '@/stores/AlgsetStore'
@@ -40,10 +41,15 @@ export const useTimingStore = defineStore('timing', () => {
 
     const repsTarget = computed(() => Math.max(1, Number(settings.store.reps) || 12))
 
+    // Getrimmter Durchschnitt: je floor(10%) der schnellsten und langsamsten
+    // Versuche fallen weg (bei 12 Versuchen also je einer).
     const avgMs = computed(() => {
-        if (repTimes.value.length === 0) return null
-        return Math.round(repTimes.value.reduce((a, b) => a + b, 0) / repTimes.value.length)
+        const mean = trimmedMean(repTimes.value)
+        return mean === null ? null : Math.round(mean)
     })
+
+    // Welche Versuche der Trim aussortiert — für die Darstellung der Liste.
+    const trimmedReps = computed(() => trimmedIndices(repTimes.value))
 
     const start = (algsetToTime) => {
         algsetId.value = algsetToTime.id
@@ -200,7 +206,7 @@ export const useTimingStore = defineStore('timing', () => {
 
     return {
         stage, algsetId, algset, queue, index, repTimes, saving, manualStartedAt,
-        currentCase, repsTarget, avgMs, progress,
+        currentCase, repsTarget, avgMs, trimmedReps, progress,
         start, stop, armCase, recordRep, undoRep, restartCase,
         saveAndNext, skipCase, prevCase, goToCase, manualToggle,
     }

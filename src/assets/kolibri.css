@@ -119,6 +119,13 @@ a:hover {
   font-weight: 600;
 }
 
+/* Anflüge, die der Trim aus der Wertung nimmt */
+.k-trimmed {
+  color: var(--bs-secondary-color);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
 /* Flügelschlag-Animationen (global, damit sie überall referenzierbar sind) */
 @keyframes k-flap {
   from { transform: rotate(-24deg); }

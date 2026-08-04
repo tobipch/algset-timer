@@ -22,7 +22,11 @@ Timer- und Smartcube-Integration orientieren sich an
   - **Algfolded-JSON**: `edge_comms.json` / `corner_comms.json` — die Cases des
     gewählten Buffers werden extrahiert (erster Alg pro Case), Buchstaben nach Speffz
 - **Timing-Session**: geht Case für Case durch, misst pro Case x Versuche
-  (Standard 12) und fragt danach die Anzahl Regrips ab.
+  (Standard 12) und fragt danach die Anzahl Regrips ab. Gewertet wird der
+  **getrimmte Durchschnitt**: je `floor(n * 10%)` der schnellsten und
+  langsamsten Versuche fallen weg (bei 12 Versuchen also je einer, wie beim
+  WCA-Average), sodass ein verpatzter oder ein Glücks-Versuch das Ergebnis
+  nicht verzerrt. Unter 10 Versuchen wird nicht getrimmt.
   - Mit Smartcube (GAN, MoYu, QiYi): kein Scramble nötig — der virtuelle Cube wird
     auf den „Vor-Alg-Zustand“ gesetzt, der erste Move startet den Timer, das
     Erreichen des Zielzustands stoppt ihn. Der nächste Versuch startet direkt vom
@@ -83,6 +87,9 @@ npm run typecheck  # API-Typecheck
 - Buchstaben-Schema: Speffz (UB=A, UR=B, … DL=X; Ecken UBL=A … DBL=X).
 - Die Zeiten werden in ms gespeichert; der Export schreibt Sekunden mit 2
   Nachkommastellen, wie im Sheet.
+- Der Durchschnitt wird beim Ausliefern immer aus den gespeicherten Rohzeiten
+  neu berechnet — eine Änderung an der Trim-Formel wirkt damit rückwirkend auf
+  alle bereits gemessenen Cases.
 - Pro Case wird das jeweils letzte Messergebnis angezeigt; erneutes Messen
   überschreibt nicht, sondern legt ein neues Ergebnis an (das neueste zählt).
 - `cubeOrientation` in den Session-Einstellungen (z.B. `z2`) remappt die

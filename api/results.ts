@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./_lib/db.js";
 import { ensureSchema } from "./_lib/schema.js";
 import { requireAuth } from "./_lib/auth.js";
+import { trimmedMean } from "./_lib/stats.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAuth(req, res)) return;
@@ -35,7 +36,9 @@ async function saveResult(req: VercelRequest, res: VercelResponse) {
   }
 
   const rounded = timesMs.map((t: number) => Math.round(t));
-  const avgMs = Math.round(rounded.reduce((a: number, b: number) => a + b, 0) / rounded.length);
+  // Getrimmter Mittelwert: je floor(10%) der schnellsten und langsamsten
+  // Versuche fallen weg (bei 12 Versuchen also je einer).
+  const avgMs = Math.round(trimmedMean(rounded)!);
 
   const inserted = (await sql`
     INSERT INTO results (case_id, times_ms, avg_ms, regrips)

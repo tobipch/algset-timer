@@ -79,11 +79,22 @@ const caseStickers = computed(() => {
   return `${timing.algset.buffer} → ${t1} → ${t2}`
 })
 
-const bestRepMs = computed(() =>
-  timing.repTimes.length > 0 ? Math.min(...timing.repTimes) : null)
+// Schnellster Anflug, der auch in die Wertung eingeht (nicht getrimmt).
+const bestCountingMs = computed(() => {
+  const counting = timing.repTimes.filter((_, i) => !timing.trimmedReps.has(i))
+  return counting.length > 0 ? Math.min(...counting) : null
+})
 
 const rating = computed(() =>
   timing.avgMs !== null ? speedRating(timing.avgMs) : null)
+
+const trimPerSide = computed(() => timing.trimmedReps.size / 2)
+
+const trimHint = computed(() => trimPerSide.value > 0
+  ? `Getrimmter Durchschnitt: ${trimPerSide.value === 1
+      ? 'die schnellste und die langsamste Zeit fliegen'
+      : `je die ${trimPerSide.value} schnellsten und langsamsten Zeiten fliegen`} aus der Wertung.`
+  : 'Durchschnitt aller Anflüge (ab 10 Anflügen wird getrimmt).')
 
 const progressPercent = computed(() =>
   timing.progress.total === 0 ? 0 : Math.round(100 * timing.progress.timed / timing.progress.total))
@@ -219,9 +230,13 @@ onUnmounted(() => {
             <!-- regrips prompt -->
             <div v-if="timing.stage === 'regrips'">
               <hr>
-              <h5 class="mb-1">Ø {{ msToHumanReadable(timing.avgMs ?? 0) }}s
+              <h5 class="mb-1" :title="trimHint">Ø {{ msToHumanReadable(timing.avgMs ?? 0) }}s
                 <span class="text-muted fw-normal fs-6">≈ {{ msToWingBeats(timing.avgMs ?? 0) }} Flügelschläge</span>
               </h5>
+              <p v-if="timing.trimmedReps.size > 0" class="text-muted small mb-1">
+                getrimmt: {{ trimPerSide === 1 ? 'schnellster und langsamster Anflug fliegen'
+                  : `je ${trimPerSide} schnellste und langsamste Anflüge fliegen` }} aus der Wertung
+              </p>
               <p v-if="rating" class="small text-muted mb-2">{{ rating.emoji }} {{ rating.label }}</p>
               <p class="mb-2">Wie viele Regrips hat der Alg?</p>
               <div class="btn-group mb-3">
@@ -301,18 +316,28 @@ onUnmounted(() => {
         <div class="card">
           <div class="card-body">
             <h6 class="card-title">Anflüge
-              <span v-if="timing.avgMs !== null" class="text-muted fw-normal">
+              <span v-if="timing.avgMs !== null" class="text-muted fw-normal"
+                    :title="trimHint">
                 · Ø {{ msToHumanReadable(timing.avgMs) }}s
                 ≈ {{ msToWingBeats(timing.avgMs) }} Flügelschläge
               </span>
             </h6>
             <ol class="mb-0">
               <li v-for="(t, i) in timing.repTimes" :key="i"
-                  :class="{'k-best': t === bestRepMs}">
-                {{ msToHumanReadable(t) }}<span v-if="t === bestRepMs" title="Schnellster Anflug"> 🪶</span>
+                  :class="{'k-trimmed': timing.trimmedReps.has(i), 'k-best': !timing.trimmedReps.has(i) && t === bestCountingMs}">
+                <template v-if="timing.trimmedReps.has(i)">
+                  <span title="Vom getrimmten Durchschnitt ausgenommen">{{ msToHumanReadable(t) }}</span>
+                </template>
+                <template v-else>
+                  {{ msToHumanReadable(t) }}<span v-if="t === bestCountingMs" title="Schnellster gewerteter Anflug"> 🪶</span>
+                </template>
               </li>
             </ol>
             <div v-if="timing.repTimes.length === 0" class="text-muted small">Noch keine Anflüge.</div>
+            <div v-else-if="timing.trimmedReps.size > 0" class="text-muted small mt-1">
+              Durchgestrichen = getrimmt ({{ timing.trimmedReps.size }} von
+              {{ timing.repTimes.length }} Anflügen fliegen aus der Wertung).
+            </div>
           </div>
         </div>
         <div class="text-muted small mt-2">

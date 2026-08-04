@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./_lib/db.js";
 import { ensureSchema } from "./_lib/schema.js";
 import { requireAuth } from "./_lib/auth.js";
+import { trimmedMean } from "./_lib/stats.js";
 
 const VALID_PAIR = /^[A-X]{2}$/;
 
@@ -58,6 +59,11 @@ async function listAlgsets(res: VercelResponse) {
   const byAlgset = new Map<number, unknown[]>();
   for (const c of cases) {
     if (!byAlgset.has(c.algset_id)) byAlgset.set(c.algset_id, []);
+    // Der Durchschnitt wird aus den Rohzeiten neu berechnet, damit auch vor
+    // einer Formeländerung gespeicherte Ergebnisse konsistent sind. avg_ms
+    // dient nur noch als Fallback, falls die Rohzeiten fehlen.
+    const timesMs = Array.isArray(c.times_ms) ? c.times_ms : null;
+    const avgMs = timesMs ? Math.round(trimmedMean(timesMs)!) : c.avg_ms;
     byAlgset.get(c.algset_id)!.push({
       id: c.id,
       pair: c.pair,
@@ -66,7 +72,7 @@ async function listAlgsets(res: VercelResponse) {
       result:
         c.avg_ms == null
           ? null
-          : { timesMs: c.times_ms, avgMs: c.avg_ms, regrips: c.regrips, createdAt: c.result_at },
+          : { timesMs: c.times_ms, avgMs, regrips: c.regrips, createdAt: c.result_at },
     });
   }
 
