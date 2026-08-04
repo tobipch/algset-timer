@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import '@/assets/global.css'
+import '@/assets/kolibri.css'
 
 import { useAuthStore } from '@/stores/AuthStore'
 import { useAlgsetStore } from '@/stores/AlgsetStore'

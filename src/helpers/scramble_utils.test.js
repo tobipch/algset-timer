@@ -14,6 +14,11 @@ describe('expandCommutator', () => {
     expect(expandCommutator("[U' M2 U': [M, U2]]")).toBe("U' M2 U' M U2 M' U2 U M2 U")
   })
 
+  it('accepts a bracketed plain sequence (sheet style)', () => {
+    expect(expandCommutator("[M U' M' U' M U' M' U']")).toBe("M U' M' U' M U' M' U'")
+    expect(expandCommutator("[D': [S, L F' L']]")).toBe("D' S L F' L' S' L F L' D")
+  })
+
   it('rejects malformed input', () => {
     expect(expandCommutator('[R2, S')).toBeNull()
     expect(expandCommutator('R], S')).toBeNull()

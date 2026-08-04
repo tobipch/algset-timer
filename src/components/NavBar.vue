@@ -2,8 +2,12 @@
 import {ref} from 'vue'
 import {Dropdown} from 'bootstrap'
 import {useBluetoothCubeStore} from '@/stores/BluetoothCubeStore'
+import {useDisplayStore} from '@/stores/DisplayStore'
+import KolibriBird from '@/components/KolibriBird.vue'
+import {randomFact} from '@/helpers/kolibri'
 
 const btStore = useBluetoothCubeStore()
+const display = useDisplayStore()
 const toggleButton = ref(null)
 
 // Bootstrap doesn't reliably auto-close the menu when Vue re-renders it on
@@ -15,13 +19,22 @@ const closeMenu = () => {
 const connect = (brand) => { closeMenu(); btStore.connect(brand) }
 const connectKeyboard = () => { closeMenu(); btStore._getInternals().connectKeyboard() }
 const disconnect = () => { closeMenu(); btStore.disconnect() }
+
+// Easter Egg: Klick auf den Kolibri zwitschert einen Fakt.
+const chirp = (event) => {
+  event.preventDefault()
+  display.showToast('🐦 ' + randomFact(), 'info', 8000)
+}
 </script>
 
 <template>
-  <nav class="navbar navbar-expand bg-body-tertiary border-bottom">
+  <nav class="navbar navbar-expand kolibri-nav">
     <div class="container-lg">
-      <router-link class="navbar-brand" to="/">
-        <i class="bi bi-stopwatch"></i> Algset Timer
+      <router-link class="navbar-brand d-flex align-items-center gap-2" to="/">
+        <span @click.stop="chirp" title="Psst… der Kolibri weiss was.">
+          <KolibriBird :size="34"/>
+        </span>
+        <span>Kolibri Timer</span>
       </router-link>
 
       <ul class="navbar-nav me-auto">
@@ -37,7 +50,7 @@ const disconnect = () => { closeMenu(); btStore.disconnect() }
         </li>
         <li class="nav-item">
           <router-link class="nav-link" active-class="active" to="/algsets">
-            <i class="bi bi-collection"></i><span class="d-none d-sm-inline"> Algsets</span>
+            <i class="bi bi-flower1"></i><span class="d-none d-sm-inline"> Algsets</span>
           </router-link>
         </li>
       </ul>
@@ -45,7 +58,7 @@ const disconnect = () => { closeMenu(); btStore.disconnect() }
       <!-- Smart cube connection -->
       <div class="dropdown">
         <button ref="toggleButton" class="btn btn-sm dropdown-toggle"
-                :class="btStore.connected ? 'btn-success' : 'btn-outline-secondary'"
+                :class="btStore.connected ? 'btn-success' : 'btn-outline-light'"
                 data-bs-toggle="dropdown"
                 @pointerenter="btStore.warmupLibraries()"
                 @click="btStore.warmupLibraries()">

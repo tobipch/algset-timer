@@ -1,0 +1,130 @@
+/* Kolibri-Theme: schillernde Farben eines Kolibris — Smaragd, Teal,
+   Violett und der magentafarbene Kehlfleck (Gorget). */
+
+:root {
+  --k-emerald: #0f9d6b;
+  --k-emerald-dark: #0c7d55;
+  --k-teal: #0aa2a8;
+  --k-violet: #7c5cd6;
+  --k-magenta: #e0388f;
+  --k-nectar: #ffc94d;
+  --k-nav-gradient: linear-gradient(100deg, #10382d 0%, #0e5c45 40%, #11525e 75%, #372f66 100%);
+}
+
+/* --- Navbar: irisierendes Gefieder --- */
+.kolibri-nav {
+  background: var(--k-nav-gradient) !important;
+  border-bottom: 2px solid var(--k-magenta) !important;
+}
+.kolibri-nav .navbar-brand,
+.kolibri-nav .nav-link {
+  color: #eafff5;
+}
+.kolibri-nav .nav-link:hover {
+  color: #ffd9ec;
+}
+.kolibri-nav .nav-link.active {
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(224, 56, 143, 0.8);
+}
+.kolibri-nav .navbar-brand:hover .kolibri .wing {
+  animation: k-flap 0.12s ease-in-out infinite alternate;
+}
+
+/* --- Buttons im Kolibri-Kleid --- */
+.btn-primary {
+  --bs-btn-bg: var(--k-emerald);
+  --bs-btn-border-color: var(--k-emerald);
+  --bs-btn-hover-bg: var(--k-emerald-dark);
+  --bs-btn-hover-border-color: var(--k-emerald-dark);
+  --bs-btn-active-bg: var(--k-emerald-dark);
+  --bs-btn-active-border-color: var(--k-emerald-dark);
+  --bs-btn-disabled-bg: var(--k-emerald);
+  --bs-btn-disabled-border-color: var(--k-emerald);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--k-teal);
+  --bs-btn-border-color: var(--k-teal);
+  --bs-btn-hover-bg: var(--k-teal);
+  --bs-btn-hover-border-color: var(--k-teal);
+  --bs-btn-active-bg: var(--k-teal);
+  --bs-btn-active-border-color: var(--k-teal);
+}
+.btn-success {
+  --bs-btn-bg: var(--k-violet);
+  --bs-btn-border-color: var(--k-violet);
+  --bs-btn-hover-bg: #6647c0;
+  --bs-btn-hover-border-color: #6647c0;
+  --bs-btn-active-bg: #6647c0;
+  --bs-btn-active-border-color: #6647c0;
+}
+
+.badge.text-bg-primary {
+  background-color: var(--k-violet) !important;
+}
+.badge.text-bg-secondary {
+  background-color: var(--k-teal) !important;
+}
+
+/* --- Fortschritt: vom ersten Flügelschlag bis zur letzten Blüte --- */
+.k-progress {
+  height: 6px;
+  background-color: var(--bs-secondary-bg);
+}
+.k-progress .progress-bar {
+  background: linear-gradient(90deg, var(--k-emerald), var(--k-teal), var(--k-magenta));
+}
+
+/* --- Überschriften mit Gefieder-Unterstrich --- */
+.k-title {
+  position: relative;
+  display: inline-block;
+}
+.k-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 30%;
+  bottom: -4px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--k-emerald), var(--k-magenta));
+}
+
+/* Timer im Flug: Kehlfleck-Magenta */
+.timer.running {
+  color: var(--k-magenta) !important;
+}
+
+/* Links in Kolibri-Teal */
+a {
+  color: var(--k-teal);
+}
+a:hover {
+  color: var(--k-emerald);
+}
+
+/* Fakten-Kästchen */
+.k-fact {
+  border-left: 3px solid var(--k-nectar);
+  background: color-mix(in srgb, var(--k-nectar) 12%, transparent);
+  border-radius: 0 6px 6px 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* Die schnellste Feder in der Versuchsliste */
+.k-best {
+  color: var(--k-emerald);
+  font-weight: 600;
+}
+
+/* Flügelschlag-Animationen (global, damit sie überall referenzierbar sind) */
+@keyframes k-flap {
+  from { transform: rotate(-24deg); }
+  to   { transform: rotate(34deg); }
+}
+@keyframes k-hover {
+  from { transform: translateY(-1.5px) rotate(-2deg); }
+  to   { transform: translateY(1.5px) rotate(2deg); }
+}

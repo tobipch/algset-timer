@@ -1,8 +1,14 @@
-# Algset Timer
+# Kolibri Timer
 
 Persönliches Tool zum Timen von 3x3-Blindfolded-Algsets (3-Style-Commutators) mit dem
 Smartcube — um herauszufinden, welche Cases die schnellsten sind und wohin sich
 Buffer-Breaks lohnen.
+
+Das UI ist Kolibri-getauft: Cases sind Blüten, Versuche sind Anflüge, Zeiten werden
+in Flügelschläge (~50/s) umgerechnet, und ein schwirrender SVG-Kolibri begleitet den
+Timer. Ein Klick auf den Vogel in der Navbar zwitschert einen Kolibri-Fakt.
+Funktional ändert das nichts — Timing, Regrips, Übersicht und XLSX-Export bleiben
+exakt wie gehabt.
 
 Timer- und Smartcube-Integration orientieren sich an
 [Algfolded](https://github.com/tobipch/algfolded).

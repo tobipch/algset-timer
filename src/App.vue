@@ -11,13 +11,18 @@ const display = useDisplayStore()
 <template>
   <NavBar/>
 
-  <div class="container-lg py-3">
+  <div class="container-lg py-3 flex-grow-1">
     <div v-if="!auth.checked" class="text-center py-5">
       <div class="spinner-border" role="status"></div>
     </div>
     <LoginCard v-else-if="auth.authRequired && !auth.authed"/>
     <router-view v-else/>
   </div>
+
+  <footer class="text-center text-muted small py-3">
+    <i class="bi bi-feather"></i>
+    Kolibri Timer — misst im Schwirrflug, merkt sich jede Blüte.
+  </footer>
 
   <!-- toasts -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3">

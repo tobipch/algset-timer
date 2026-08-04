@@ -8,6 +8,9 @@ import {useDisplayStore} from '@/stores/DisplayStore'
 import {msToHumanReadable} from '@/helpers/time_formatter'
 import {algToMoveString} from '@/helpers/scramble_utils'
 import {pairToStickers} from '@/helpers/letters'
+import {msToWingBeats, randomFact, speedRating} from '@/helpers/kolibri'
+import KolibriBird from '@/components/KolibriBird.vue'
+import KolibriLoading from '@/components/KolibriLoading.vue'
 
 const algsetStore = useAlgsetStore()
 const timing = useTimingStore()
@@ -17,6 +20,7 @@ const display = useDisplayStore()
 
 const regripsInput = ref(0)
 const showExpanded = ref(false)
+const doneFact = ref(randomFact())
 
 // --- live clock ---
 const now = ref(Date.now())
@@ -35,7 +39,7 @@ watch(running, (isRunning) => {
 const timerLabel = computed(() => {
   const startedAt = btStore.attemptStartedAt ?? timing.manualStartedAt
   if (startedAt !== null) {
-    if (settings.store.timerUpdate === 'off') return '⏱️'
+    if (settings.store.timerUpdate === 'off') return '🐦'
     return msToHumanReadable(now.value - startedAt, 2, settings.store.timerUpdate === 'on')
   }
   const last = timing.repTimes[timing.repTimes.length - 1]
@@ -51,7 +55,7 @@ watch(() => btStore.solveCounter, () => {
 
 // Reset gesture: drop nothing, just notify (the attempt restarts itself).
 watch(() => btStore.resetSignal, () => {
-  display.showToast('Versuch zurückgesetzt — nächster Move startet neu', 'info', 2000)
+  display.showToast('Kurz gerüttelt, neu angeflogen — der nächste Move startet den Versuch neu', 'info', 2500)
 })
 
 // (Re-)arm tracking when the cube connects mid-session.
@@ -59,9 +63,11 @@ watch(() => btStore.connected, (connected) => {
   if (connected) timing.armCase()
 })
 
-// When entering the regrips stage, preset the input and focus.
+// When entering the regrips stage, preset the input; a fresh fact for the
+// done screen each time it appears.
 watch(() => timing.stage, (stage) => {
   if (stage === 'regrips') regripsInput.value = 0
+  if (stage === 'done') doneFact.value = randomFact()
 })
 
 const currentAlgMoves = computed(() =>
@@ -72,6 +78,15 @@ const caseStickers = computed(() => {
   const [t1, t2] = pairToStickers(timing.currentCase.pair, timing.algset.pieceType)
   return `${timing.algset.buffer} → ${t1} → ${t2}`
 })
+
+const bestRepMs = computed(() =>
+  timing.repTimes.length > 0 ? Math.min(...timing.repTimes) : null)
+
+const rating = computed(() =>
+  timing.avgMs !== null ? speedRating(timing.avgMs) : null)
+
+const progressPercent = computed(() =>
+  timing.progress.total === 0 ? 0 : Math.round(100 * timing.progress.timed / timing.progress.total))
 
 const startSession = () => {
   if (!algsetStore.active) return
@@ -116,26 +131,24 @@ onUnmounted(() => {
     <!-- no session yet: setup -->
     <div v-if="timing.stage === 'idle'" class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-6">
-        <h4>Timing-Session</h4>
-        <div v-if="!algsetStore.loaded && algsetStore.loading" class="text-muted">
-          <span class="spinner-border spinner-border-sm"></span> Algsets laden…
-        </div>
+        <h4 class="k-title mb-3">Timing-Session</h4>
+        <KolibriLoading v-if="!algsetStore.loaded && algsetStore.loading"/>
         <div v-else-if="algsetStore.algsets.length === 0" class="alert alert-info">
-          Noch kein Algset vorhanden — zuerst unter
-          <router-link to="/algsets">Algsets</router-link> eins hochladen.
+          Noch keine Blütenwiese angelegt — zuerst unter
+          <router-link to="/algsets">Algsets</router-link> eine hochladen.
         </div>
         <div v-else class="card">
           <div class="card-body">
             <label class="form-label small mb-1">Algset</label>
             <select class="form-select mb-3" v-model="algsetStore.activeId">
               <option v-for="a in algsetStore.algsets" :key="a.id" :value="a.id">
-                {{ a.name }} ({{ a.cases.filter(c => c.result).length }}/{{ a.cases.length }} gemessen)
+                {{ a.name }} ({{ a.cases.filter(c => c.result).length }}/{{ a.cases.length }} Blüten besucht)
               </option>
             </select>
 
             <div class="row g-2 mb-3">
               <div class="col-6">
-                <label class="form-label small mb-1">Versuche pro Case</label>
+                <label class="form-label small mb-1">Anflüge pro Blüte (Versuche pro Case)</label>
                 <input type="number" min="1" max="50" class="form-control"
                        v-model.number="settings.store.reps">
               </div>
@@ -149,7 +162,7 @@ onUnmounted(() => {
               <input class="form-check-input" type="checkbox" id="skip-completed"
                      v-model="settings.store.skipCompleted">
               <label class="form-check-label" for="skip-completed">
-                Bereits gemessene Cases überspringen
+                Bereits besuchte Blüten (gemessene Cases) überspringen
               </label>
             </div>
 
@@ -159,7 +172,7 @@ onUnmounted(() => {
             </div>
 
             <button class="btn btn-primary w-100" :disabled="!algsetStore.active" @click="startSession">
-              <i class="bi bi-play-fill"></i> Session starten
+              <i class="bi bi-play-fill"></i> Abflug!
             </button>
           </div>
         </div>
@@ -168,11 +181,17 @@ onUnmounted(() => {
 
     <!-- all done -->
     <div v-else-if="timing.stage === 'done'" class="text-center py-5">
-      <h3><i class="bi bi-check-circle text-success"></i> Alle Cases gemessen!</h3>
+      <div class="d-flex justify-content-center mb-2">
+        <KolibriBird :size="90" :flying="true"/>
+      </div>
+      <h3>🌺 Alle Blüten besucht!</h3>
       <p class="text-muted">{{ timing.progress.timed }} / {{ timing.progress.total }} Cases von
         „{{ timing.algset?.name }}“ haben eine Zeit.</p>
-      <router-link class="btn btn-primary me-2" to="/">Zur Übersicht</router-link>
-      <button class="btn btn-outline-secondary" @click="timing.stop()">Session beenden</button>
+      <p class="k-fact d-inline-block text-start">🐦 {{ doneFact }}</p>
+      <div class="mt-2">
+        <router-link class="btn btn-primary me-2" to="/">Zur Übersicht</router-link>
+        <button class="btn btn-outline-secondary" @click="timing.stop()">Landen</button>
+      </div>
     </div>
 
     <!-- running session -->
@@ -180,10 +199,13 @@ onUnmounted(() => {
       <div class="col-12 col-lg-8">
         <div class="card">
           <div class="card-body text-center">
-            <div class="d-flex justify-content-between text-muted small mb-2">
+            <div class="d-flex justify-content-between text-muted small mb-1">
               <span>{{ timing.algset?.name }}</span>
-              <span>Case {{ timing.index + 1 }} / {{ timing.queue.length }}
-                · {{ timing.progress.timed }} gemessen</span>
+              <span>Blüte {{ timing.index + 1 }} / {{ timing.queue.length }}
+                · {{ timing.progress.timed }} besucht</span>
+            </div>
+            <div class="progress k-progress mb-3" :title="`${timing.progress.timed} von ${timing.progress.total} Blüten besucht`">
+              <div class="progress-bar" :style="{width: progressPercent + '%'}"></div>
             </div>
 
             <div class="display-3 fw-bold noselect">{{ timing.currentCase?.pair }}</div>
@@ -197,7 +219,10 @@ onUnmounted(() => {
             <!-- regrips prompt -->
             <div v-if="timing.stage === 'regrips'">
               <hr>
-              <h5 class="mb-1">Ø {{ msToHumanReadable(timing.avgMs ?? 0) }}s</h5>
+              <h5 class="mb-1">Ø {{ msToHumanReadable(timing.avgMs ?? 0) }}s
+                <span class="text-muted fw-normal fs-6">≈ {{ msToWingBeats(timing.avgMs ?? 0) }} Flügelschläge</span>
+              </h5>
+              <p v-if="rating" class="small text-muted mb-2">{{ rating.emoji }} {{ rating.label }}</p>
               <p class="mb-2">Wie viele Regrips hat der Alg?</p>
               <div class="btn-group mb-3">
                 <button v-for="n in [0, 1, 2, 3, 4]" :key="n"
@@ -211,27 +236,30 @@ onUnmounted(() => {
                   Speichern
                 </button>
               </div>
-              <div class="text-muted small">Taste 0–9 speichert direkt und geht zum nächsten Case.</div>
+              <div class="text-muted small">Taste 0–9 speichert direkt und fliegt zur nächsten Blüte.</div>
             </div>
 
             <!-- timer -->
             <div v-else>
-              <h1 class="timer noselect my-2"
-                  :class="{running: running}"
-                  @touchstart.prevent="!btStore.connected && timing.manualToggle()">
-                {{ timerLabel }}
-              </h1>
+              <div class="d-flex align-items-center justify-content-center gap-3">
+                <KolibriBird :size="76" :flying="running || btStore.phase === 'awaiting_solve'"/>
+                <h1 class="timer noselect my-2"
+                    :class="{running: running}"
+                    @touchstart.prevent="!btStore.connected && timing.manualToggle()">
+                  {{ timerLabel }}
+                </h1>
+              </div>
               <div class="mb-2">
                 <span class="badge text-bg-primary fs-6">
-                  Versuch {{ timing.repTimes.length + 1 }} / {{ timing.repsTarget }}
+                  Anflug {{ timing.repTimes.length + 1 }} / {{ timing.repsTarget }}
                 </span>
               </div>
               <div v-if="btStore.connected" class="text-muted small">
                 <template v-if="btStore.phase === 'awaiting_solve'">
-                  Erster Move startet den Timer.
+                  Bereit zum Abflug — der erste Move startet den Timer.
                 </template>
                 <template v-else-if="btStore.phase === 'solving'">
-                  Läuft… (D- oder U-Layer 360° drehen = Versuch zurücksetzen)
+                  Im Flug… (D- oder U-Layer 360° drehen = zurück zur Blüte)
                 </template>
                 <template v-else>Tracking wird vorbereitet…</template>
               </div>
@@ -239,7 +267,7 @@ onUnmounted(() => {
                 Leertaste: Versuch starten / stoppen (kein Cube verbunden)
               </div>
               <div v-if="btStore.tooFarFromSolved" class="alert alert-warning py-1 small mt-2 mb-0">
-                Cube weit vom Zielzustand entfernt — falscher Alg? D-Layer 360° drehen zum Zurücksetzen.
+                Von der Blüte abgekommen — falscher Alg? D-Layer 360° drehen setzt den Versuch zurück.
               </div>
             </div>
           </div>
@@ -248,10 +276,10 @@ onUnmounted(() => {
         <div class="d-flex flex-wrap gap-2 mt-2">
           <button class="btn btn-sm btn-outline-secondary" @click="timing.prevCase()"
                   :disabled="timing.index === 0">
-            <i class="bi bi-skip-backward"></i> Vorheriger
+            <i class="bi bi-skip-backward"></i> Blüte zurück
           </button>
           <button class="btn btn-sm btn-outline-secondary" @click="timing.skipCase()">
-            Überspringen <i class="bi bi-skip-forward"></i>
+            Weiterfliegen <i class="bi bi-skip-forward"></i>
           </button>
           <button class="btn btn-sm btn-outline-warning" @click="timing.undoRep()"
                   :disabled="timing.repTimes.length === 0">
@@ -259,10 +287,11 @@ onUnmounted(() => {
           </button>
           <button class="btn btn-sm btn-outline-warning" @click="timing.restartCase()"
                   :disabled="timing.repTimes.length === 0">
-            Case neu starten
+            Blüte neu anfliegen
           </button>
-          <button class="btn btn-sm btn-outline-danger ms-auto" @click="timing.stop()">
-            Session beenden
+          <button class="btn btn-sm btn-outline-danger ms-auto" @click="timing.stop()"
+                  title="Session beenden">
+            <i class="bi bi-house"></i> Landen
           </button>
         </div>
       </div>
@@ -271,15 +300,19 @@ onUnmounted(() => {
       <div class="col-12 col-lg-4">
         <div class="card">
           <div class="card-body">
-            <h6 class="card-title">Versuche
+            <h6 class="card-title">Anflüge
               <span v-if="timing.avgMs !== null" class="text-muted fw-normal">
                 · Ø {{ msToHumanReadable(timing.avgMs) }}s
+                ≈ {{ msToWingBeats(timing.avgMs) }} Flügelschläge
               </span>
             </h6>
             <ol class="mb-0">
-              <li v-for="(t, i) in timing.repTimes" :key="i">{{ msToHumanReadable(t) }}</li>
+              <li v-for="(t, i) in timing.repTimes" :key="i"
+                  :class="{'k-best': t === bestRepMs}">
+                {{ msToHumanReadable(t) }}<span v-if="t === bestRepMs" title="Schnellster Anflug"> 🪶</span>
+              </li>
             </ol>
-            <div v-if="timing.repTimes.length === 0" class="text-muted small">Noch keine Versuche.</div>
+            <div v-if="timing.repTimes.length === 0" class="text-muted small">Noch keine Anflüge.</div>
           </div>
         </div>
         <div class="text-muted small mt-2">
@@ -296,8 +329,5 @@ onUnmounted(() => {
   font-size: 64px;
   font-weight: 700;
   font-family: 'Roboto Mono', ui-monospace, monospace;
-}
-.timer.running {
-  color: var(--bs-success);
 }
 </style>

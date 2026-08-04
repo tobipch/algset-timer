@@ -4,6 +4,7 @@ import {useAlgsetStore} from '@/stores/AlgsetStore'
 import {useDisplayStore} from '@/stores/DisplayStore'
 import {EDGE_BUFFERS, CORNER_BUFFERS} from '@/helpers/letters'
 import {parseSimpleText, parseAlgfoldedJson} from '@/helpers/parse_algset'
+import KolibriLoading from '@/components/KolibriLoading.vue'
 
 const algsetStore = useAlgsetStore()
 const display = useDisplayStore()
@@ -90,10 +91,11 @@ const placeholder = computed(() => format.value === 'json'
   <div class="row g-4">
     <!-- existing algsets -->
     <div class="col-12 col-lg-5">
-      <h4>Algsets</h4>
-      <div v-if="algsetStore.loading" class="text-muted"><span class="spinner-border spinner-border-sm"></span> Laden…</div>
+      <h4 class="k-title">Algsets</h4>
+      <div class="text-muted small mb-2">Deine Blütenwiesen — jede Blüte ein Case.</div>
+      <KolibriLoading v-if="algsetStore.loading"/>
       <div v-else-if="algsetStore.algsets.length === 0" class="text-muted">
-        Noch keine Algsets — rechts eins hochladen.
+        Noch ganz still hier — rechts die erste Wiese anlegen. 🌱
       </div>
       <div v-for="algset in algsetStore.algsets" :key="algset.id" class="card mb-2">
         <div class="card-body py-2 d-flex align-items-center">
@@ -102,7 +104,7 @@ const placeholder = computed(() => format.value === 'json'
             <span class="badge text-bg-secondary ms-2">{{ algset.buffer }}</span>
             <span class="badge text-bg-light ms-1">{{ algset.pieceType === 'corner' ? 'Corner' : 'Edge' }}</span>
             <div class="small text-muted">
-              {{ algset.cases.filter(c => c.result).length }} / {{ algset.cases.length }} Cases gemessen
+              🌺 {{ algset.cases.filter(c => c.result).length }} / {{ algset.cases.length }} Blüten besucht
             </div>
           </div>
           <router-link class="btn btn-sm btn-outline-primary me-2" to="/timer"
@@ -118,7 +120,8 @@ const placeholder = computed(() => format.value === 'json'
 
     <!-- upload -->
     <div class="col-12 col-lg-7">
-      <h4>Algset hochladen</h4>
+      <h4 class="k-title">Algset hochladen</h4>
+      <div class="text-muted small mb-2">Neue Wiese anlegen — der Kolibri merkt sich jede Blüte.</div>
       <div class="card">
         <div class="card-body">
           <div class="row g-2 mb-2">

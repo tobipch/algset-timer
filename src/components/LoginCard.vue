@@ -2,6 +2,7 @@
 import {ref} from 'vue'
 import {useAuthStore} from '@/stores/AuthStore'
 import {useAlgsetStore} from '@/stores/AlgsetStore'
+import KolibriBird from '@/components/KolibriBird.vue'
 
 const auth = useAuthStore()
 const algsets = useAlgsetStore()
@@ -22,7 +23,11 @@ const submit = async () => {
     <div class="col-12 col-sm-8 col-md-5 col-lg-4">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title mb-3"><i class="bi bi-lock"></i> Login</h5>
+          <div class="text-center mb-2">
+            <KolibriBird :size="70"/>
+          </div>
+          <h5 class="card-title mb-1 text-center"><i class="bi bi-lock"></i> Kolibri Timer</h5>
+          <p class="text-muted small text-center mb-3">Dieser Nektar ist privat — Passwort, bitte.</p>
           <form @submit.prevent="submit">
             <input v-model="password" type="password" class="form-control mb-2"
                    placeholder="Passwort" autofocus autocomplete="current-password">

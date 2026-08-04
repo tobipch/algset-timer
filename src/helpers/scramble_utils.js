@@ -43,10 +43,15 @@ export const expandCommutator = (str) => {
       if (c === '[') {
         flush()
         i++ // consume '['
-        const a = parseSeq([',', ':'])
+        const a = parseSeq([',', ':', ']'])
         const sep = s[i]
-        if (a === null || (sep !== ',' && sep !== ':')) return null
-        i++ // consume separator
+        if (a === null || (sep !== ',' && sep !== ':' && sep !== ']')) return null
+        i++ // consume separator (or closing bracket of a plain group)
+        if (sep === ']') {
+          // "[A]" without separator: just a bracketed move sequence
+          moves.push(...a)
+          continue
+        }
         const b = parseSeq([']'])
         if (b === null || s[i] !== ']') return null
         i++ // consume ']'

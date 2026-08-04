@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {algToMoveString} from '@/helpers/scramble_utils'
+import {speedRating} from '@/helpers/kolibri'
 import {useBluetoothCubeStore} from '@/stores/BluetoothCubeStore'
 import {useSettingsStore} from '@/stores/SettingsStore'
 import {useAlgsetStore} from '@/stores/AlgsetStore'
@@ -121,8 +122,13 @@ export const useTimingStore = defineStore('timing', () => {
         const c = currentCase.value
         if (!c || repTimes.value.length === 0 || saving.value) return
         saving.value = true
+        const {emoji} = speedRating(avgMs.value)
+        const pair = c.pair
+        const seconds = (avgMs.value / 1000).toFixed(2)
         try {
             await algsetStore.saveResult(c.id, repTimes.value.slice(), regrips)
+            useDisplayStore().showToast(
+                `${emoji} Blüte ${pair} bestäubt — ${seconds}s`, 'success', 2500)
             advance()
         } catch (e) {
             console.error('saving result failed', e)

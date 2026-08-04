@@ -4,6 +4,8 @@ import {useAlgsetStore} from '@/stores/AlgsetStore'
 import {useTimingStore} from '@/stores/TimingStore'
 import {useDisplayStore} from '@/stores/DisplayStore'
 import {msToHumanReadable} from '@/helpers/time_formatter'
+import {msToWingBeats} from '@/helpers/kolibri'
+import KolibriLoading from '@/components/KolibriLoading.vue'
 import {useRouter} from 'vue-router'
 
 const algsetStore = useAlgsetStore()
@@ -60,11 +62,14 @@ const summary = computed(() => {
   if (timed.length === 0) return null
   const avg = timed.reduce((s, r) => s + r.avgMs, 0) / timed.length
   const regrips = timed.reduce((s, r) => s + (r.regrips ?? 0), 0)
+  const slowest = timed.reduce((worst, r) => (worst === null || r.avgMs > worst.avgMs ? r : worst), null)
   return {
     timed: timed.length,
     total: rows.value.length,
+    percent: Math.round(100 * timed.length / rows.value.length),
     avgS: (avg / 1000).toFixed(2),
     regrips,
+    slowest,
   }
 })
 
@@ -119,7 +124,7 @@ const download = async () => {
 <template>
   <div>
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-      <h4 class="mb-0 me-2">Übersicht</h4>
+      <h4 class="mb-0 me-2 k-title">Übersicht</h4>
       <select v-if="algsetStore.algsets.length > 0" class="form-select form-select-sm w-auto"
               v-model="algsetStore.activeId">
         <option v-for="a in algsetStore.algsets" :key="a.id" :value="a.id">{{ a.name }}</option>
@@ -132,18 +137,22 @@ const download = async () => {
       </button>
     </div>
 
-    <div v-if="algsetStore.loading && !algsetStore.loaded" class="text-muted">
-      <span class="spinner-border spinner-border-sm"></span> Laden…
-    </div>
+    <KolibriLoading v-if="algsetStore.loading && !algsetStore.loaded"/>
     <div v-else-if="algsetStore.algsets.length === 0" class="alert alert-info">
-      Noch keine Algsets — unter <router-link to="/algsets">Algsets</router-link> eins hochladen.
+      Noch keine Blütenwiese — unter <router-link to="/algsets">Algsets</router-link> ein Set hochladen.
     </div>
 
     <template v-else-if="algsetStore.active">
-      <div v-if="summary" class="mb-2 small text-muted">
-        {{ summary.timed }} / {{ summary.total }} Cases gemessen ·
+      <div v-if="summary" class="mb-1 small text-muted">
+        🌺 {{ summary.timed }} / {{ summary.total }} Blüten besucht ·
         Ø Zeit {{ summary.avgS }}s ·
         Total Regrips {{ summary.regrips }}
+        <span v-if="summary.slowest"> · 🥀 zäheste Blüte:
+          <strong>{{ summary.slowest.pair }}</strong> ({{ (summary.slowest.avgMs / 1000).toFixed(2) }}s)</span>
+      </div>
+      <div v-if="summary" class="progress k-progress mb-3"
+           :title="`${summary.percent}% des Algsets besucht`">
+        <div class="progress-bar" :style="{width: summary.percent + '%'}"></div>
       </div>
 
       <div class="table-responsive">
@@ -172,7 +181,11 @@ const download = async () => {
               <td class="fw-bold">{{ row.pair }}</td>
               <td class="alg small">{{ row.alg }}</td>
               <td class="text-end">
-                <template v-if="row.avgMs !== null">{{ msToHumanReadable(row.avgMs) }}</template>
+                <template v-if="row.avgMs !== null">
+                  <span :title="`≈ ${msToWingBeats(row.avgMs)} Flügelschläge`">
+                    {{ msToHumanReadable(row.avgMs) }}
+                  </span>
+                </template>
                 <span v-else class="text-muted">—</span>
               </td>
               <td class="text-end">
@@ -182,7 +195,7 @@ const download = async () => {
               <td class="text-end d-none d-md-table-cell">{{ row.reps || '—' }}</td>
               <td class="text-end d-none d-md-table-cell small">{{ formatDate(row.date) }}</td>
               <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Diesen Case (neu) messen"
+                <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Diese Blüte (neu) anfliegen"
                         @click="timeCase(row)">
                   <i class="bi bi-stopwatch"></i>
                 </button>
