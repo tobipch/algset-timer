@@ -1,5 +1,5 @@
 <script setup>
-import {computed, ref} from 'vue'
+import {computed, nextTick, ref} from 'vue'
 import {useAlgsetStore} from '@/stores/AlgsetStore'
 import {useTimingStore} from '@/stores/TimingStore'
 import {useDisplayStore} from '@/stores/DisplayStore'
@@ -72,6 +72,43 @@ const summary = computed(() => {
     slowest,
   }
 })
+
+// --- Regrips inline korrigieren ---
+const editingRegripsId = ref(null)
+const regripsDraft = ref(0)
+const regripInput = ref(null)
+
+const startEditRegrips = async (row) => {
+  editingRegripsId.value = row.id
+  regripsDraft.value = row.regrips ?? 0
+  await nextTick()
+  // ref auf ein v-for-Element ist ein Array
+  const el = Array.isArray(regripInput.value) ? regripInput.value[0] : regripInput.value
+  el?.focus()
+  el?.select()
+}
+
+const cancelRegrips = () => {
+  editingRegripsId.value = null
+}
+
+const commitRegrips = async (row) => {
+  if (editingRegripsId.value !== row.id) return // schon geschlossen (z.B. via Esc)
+  const value = Math.round(Number(regripsDraft.value))
+  editingRegripsId.value = null
+  if (!Number.isInteger(value) || value < 0 || value > 20) {
+    display.showToast('Regrips müssen zwischen 0 und 20 liegen', 'danger')
+    return
+  }
+  if (value === row.regrips) return
+  try {
+    await algsetStore.updateRegrips(row.id, value)
+    display.showToast(`✏️ ${row.pair}: jetzt ${value} ${value === 1 ? 'Regrip' : 'Regrips'}`, 'success', 2500)
+  } catch (e) {
+    console.error('updating regrips failed', e)
+    display.showToast('Korrektur fehlgeschlagen', 'danger')
+  }
+}
 
 const timeCase = (row) => {
   const algset = algsetStore.active
@@ -189,7 +226,20 @@ const download = async () => {
                 <span v-else class="text-muted">—</span>
               </td>
               <td class="text-end">
-                <template v-if="row.regrips !== null">{{ row.regrips }}</template>
+                <input v-if="editingRegripsId === row.id"
+                       ref="regripInput"
+                       type="number" min="0" max="20"
+                       class="form-control form-control-sm text-end regrip-input"
+                       v-model.number="regripsDraft"
+                       @keydown.enter.prevent="commitRegrips(row)"
+                       @keydown.esc.prevent="cancelRegrips()"
+                       @blur="commitRegrips(row)">
+                <button v-else-if="row.regrips !== null"
+                        class="btn btn-sm btn-link p-0 text-decoration-none regrip-cell"
+                        title="Regrips korrigieren (Klick)"
+                        @click="startEditRegrips(row)">
+                  {{ row.regrips }} <i class="bi bi-pencil regrip-pencil"></i>
+                </button>
                 <span v-else class="text-muted">—</span>
               </td>
               <td class="text-end d-none d-md-table-cell">{{ row.reps || '—' }}</td>
@@ -211,3 +261,22 @@ const download = async () => {
     </template>
   </div>
 </template>
+
+<style scoped>
+/* Regrip-Zelle: der Stift erscheint erst beim Hover, damit die Tabelle ruhig bleibt */
+.regrip-cell {
+  color: var(--bs-body-color);
+}
+.regrip-pencil {
+  opacity: 0;
+  font-size: 0.75em;
+}
+.regrip-cell:hover .regrip-pencil,
+.regrip-cell:focus-visible .regrip-pencil {
+  opacity: 0.6;
+}
+.regrip-input {
+  width: 4.5rem;
+  display: inline-block;
+}
+</style>

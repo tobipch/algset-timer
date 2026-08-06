@@ -11,6 +11,7 @@ import {pairToStickers} from '@/helpers/letters'
 import {msToWingBeats, randomFact, speedRating} from '@/helpers/kolibri'
 import KolibriBird from '@/components/KolibriBird.vue'
 import KolibriLoading from '@/components/KolibriLoading.vue'
+import RegripCorrection from '@/components/RegripCorrection.vue'
 
 const algsetStore = useAlgsetStore()
 const timing = useTimingStore()
@@ -199,6 +200,13 @@ onUnmounted(() => {
       <p class="text-muted">{{ timing.progress.timed }} / {{ timing.progress.total }} Cases von
         „{{ timing.algset?.name }}“ haben eine Zeit.</p>
       <p class="k-fact d-inline-block text-start">🐦 {{ doneFact }}</p>
+
+      <div class="row justify-content-center mb-3">
+        <div class="col-12 col-md-7 col-lg-5">
+          <RegripCorrection/>
+        </div>
+      </div>
+
       <div class="mt-2">
         <router-link class="btn btn-primary me-2" to="/">Zur Übersicht</router-link>
         <button class="btn btn-outline-secondary" @click="timing.stop()">Landen</button>
@@ -340,6 +348,9 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
+        <!-- Nachträgliche Regrip-Korrektur für den zuletzt gespeicherten Case -->
+        <RegripCorrection class="mt-2"/>
+
         <div class="text-muted small mt-2">
           <div>Backspace: letzten Versuch löschen</div>
           <div v-if="btStore.connected">Cube-Geste: D/U-Layer 360° = Versuch neu starten</div>

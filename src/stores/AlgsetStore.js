@@ -60,6 +60,16 @@ export const useAlgsetStore = defineStore('algsets', () => {
         return data?.result
     }
 
+    // Nachträgliche Korrektur der Regrips — die Zeiten bleiben unangetastet.
+    const updateRegrips = async (caseId, regrips) => {
+        const data = await apiFetch('/api/results', {
+            method: 'PATCH',
+            body: {caseId, regrips},
+        })
+        applyResult(caseId, data?.result ?? null)
+        return data?.result
+    }
+
     const clearResult = async (caseId) => {
         await apiFetch(`/api/results?caseId=${caseId}`, {method: 'DELETE'})
         applyResult(caseId, null)
@@ -72,5 +82,8 @@ export const useAlgsetStore = defineStore('algsets', () => {
         }
     }
 
-    return {algsets, loading, loaded, activeId, active, load, create, remove, saveResult, clearResult}
+    return {
+        algsets, loading, loaded, activeId, active,
+        load, create, remove, saveResult, updateRegrips, clearResult,
+    }
 })

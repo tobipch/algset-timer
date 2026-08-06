@@ -10,6 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await ensureSchema();
     if (req.method === "POST") return await saveResult(req, res);
+    if (req.method === "PATCH") return await updateRegrips(req, res);
     if (req.method === "DELETE") return await deleteResults(req, res);
     res.status(405).json({ error: "method not allowed" });
   } catch (e) {
@@ -53,6 +54,48 @@ async function saveResult(req: VercelRequest, res: VercelResponse) {
       avgMs,
       regrips,
       createdAt: inserted[0].created_at,
+    },
+  });
+}
+
+// Nachträgliche Korrektur der Regrip-Zahl am jüngsten Ergebnis eines Cases.
+// Die gemessenen Zeiten bleiben unangetastet.
+async function updateRegrips(req: VercelRequest, res: VercelResponse) {
+  const { caseId, regrips } = req.body ?? {};
+  if (!Number.isInteger(caseId) || caseId <= 0) {
+    return res.status(400).json({ error: "invalid caseId" });
+  }
+  if (!Number.isInteger(regrips) || regrips < 0 || regrips > 20) {
+    return res.status(400).json({ error: "invalid regrips" });
+  }
+
+  const updated = (await sql`
+    UPDATE results SET regrips = ${regrips}
+     WHERE id = (
+       SELECT id FROM results WHERE case_id = ${caseId}
+        ORDER BY created_at DESC, id DESC LIMIT 1
+     )
+    RETURNING id, times_ms, avg_ms, regrips, created_at
+  `) as {
+    id: number;
+    times_ms: number[] | null;
+    avg_ms: number;
+    regrips: number;
+    created_at: string;
+  }[];
+
+  if (updated.length === 0) {
+    return res.status(404).json({ error: "no result for this case" });
+  }
+  const r = updated[0];
+  const timesMs = Array.isArray(r.times_ms) ? r.times_ms : null;
+  res.status(200).json({
+    result: {
+      id: r.id,
+      timesMs: r.times_ms,
+      avgMs: timesMs ? Math.round(trimmedMean(timesMs)!) : r.avg_ms,
+      regrips: r.regrips,
+      createdAt: r.created_at,
     },
   });
 }

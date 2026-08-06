@@ -30,6 +30,12 @@ export const useTimingStore = defineStore('timing', () => {
     // Manual (no smart cube) stopwatch
     const manualStartedAt = ref(null)
 
+    // Zuletzt gespeicherter Case — damit die Regrip-Zahl direkt danach noch
+    // korrigiert werden kann ("ich hatte doch einen Regrip").
+    // {caseId, pair, avgMs, regrips}
+    const lastSaved = ref(null)
+    const correctingRegrips = ref(false)
+
     const algset = computed(() =>
         algsetStore.algsets.find(a => a.id === algsetId.value) ?? null)
 
@@ -64,6 +70,7 @@ export const useTimingStore = defineStore('timing', () => {
         index.value = startIdx
         repTimes.value = []
         manualStartedAt.value = null
+        lastSaved.value = null
         stage.value = index.value >= queue.value.length ? 'done' : 'reps'
         armCase()
     }
@@ -74,6 +81,7 @@ export const useTimingStore = defineStore('timing', () => {
         queue.value = []
         repTimes.value = []
         manualStartedAt.value = null
+        lastSaved.value = null
         btStore.resetTracking()
     }
 
@@ -131,8 +139,10 @@ export const useTimingStore = defineStore('timing', () => {
         const {emoji} = speedRating(avgMs.value)
         const pair = c.pair
         const seconds = (avgMs.value / 1000).toFixed(2)
+        const savedAvgMs = avgMs.value
         try {
             await algsetStore.saveResult(c.id, repTimes.value.slice(), regrips)
+            lastSaved.value = {caseId: c.id, pair, avgMs: savedAvgMs, regrips}
             useDisplayStore().showToast(
                 `${emoji} Blüte ${pair} bestäubt — ${seconds}s`, 'success', 2500)
             advance()
@@ -141,6 +151,24 @@ export const useTimingStore = defineStore('timing', () => {
             useDisplayStore().showToast('Speichern fehlgeschlagen — Verbindung/DB prüfen', 'danger')
         } finally {
             saving.value = false
+        }
+    }
+
+    // Regrips des zuletzt gespeicherten Cases nachträglich korrigieren.
+    const correctLastRegrips = async (regrips) => {
+        const last = lastSaved.value
+        if (!last || correctingRegrips.value || regrips === last.regrips) return
+        correctingRegrips.value = true
+        try {
+            await algsetStore.updateRegrips(last.caseId, regrips)
+            lastSaved.value = {...last, regrips}
+            useDisplayStore().showToast(
+                `✏️ ${last.pair}: jetzt ${regrips} ${regrips === 1 ? 'Regrip' : 'Regrips'}`, 'success', 2500)
+        } catch (e) {
+            console.error('correcting regrips failed', e)
+            useDisplayStore().showToast('Korrektur fehlgeschlagen', 'danger')
+        } finally {
+            correctingRegrips.value = false
         }
     }
 
@@ -206,8 +234,9 @@ export const useTimingStore = defineStore('timing', () => {
 
     return {
         stage, algsetId, algset, queue, index, repTimes, saving, manualStartedAt,
+        lastSaved, correctingRegrips,
         currentCase, repsTarget, avgMs, trimmedReps, progress,
         start, stop, armCase, recordRep, undoRep, restartCase,
-        saveAndNext, skipCase, prevCase, goToCase, manualToggle,
+        saveAndNext, correctLastRegrips, skipCase, prevCase, goToCase, manualToggle,
     }
 })

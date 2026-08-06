@@ -34,6 +34,10 @@ Timer- und Smartcube-Integration orientieren sich an
   - Cube-Geste: D- oder U-Layer 360° drehen = aktuellen Versuch zurücksetzen.
   - Ohne Cube: Leertaste startet/stoppt jeden Versuch.
   - Regrip-Abfrage: Tasten 0–9 speichern direkt und springen zum nächsten Case.
+  - **Regrips nachträglich korrigieren**: direkt nach dem Speichern über die
+    „Zuletzt“-Karte (für den Fall „0 angegeben, gleich darauf den Regrip
+    bemerkt“) oder jederzeit in der Übersicht per Klick auf die Zahl. Die
+    gemessenen Zeiten bleiben dabei unangetastet.
 - **Übersicht**: Tabelle pro Algset, sortierbar nach Case, Zeit, Regrips und Datum.
 - **XLSX-Export**: gleiches Layout und gleiche Formatierung wie das Sheet „UF Times“
   (Grid Spalte=1. Buchstabe / Zeile=2. Buchstabe, Average-Zeile, Best cycle breaks,
