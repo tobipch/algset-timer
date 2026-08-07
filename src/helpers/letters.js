@@ -62,3 +62,12 @@ export const CORNER_BUFFERS = withRest(
   ['UFR', 'UFL', 'UBR', 'UBL', 'RDF', 'FDL'],
   Object.keys(SPEFFZ_CORNERS)
 )
+
+// Die persönliche Buffer-Reihenfolge fürs Floaten. Beim Cycle Break lohnt es
+// sich, zum nächsten Buffer dieser Reihenfolge zu shooten — dann kann daraus
+// später eine Sandwiching-Situation werden.
+export const EDGE_BUFFER_ORDER = ['UF', 'UB', 'UR', 'UL', 'FR', 'FL', 'DF', 'DR', 'DL']
+export const CORNER_BUFFER_ORDER = ['UFR', 'UFL', 'UBR', 'UBL', 'RDF', 'FDL']
+
+export const bufferOrderFor = (pieceType) =>
+  pieceType === 'corner' ? CORNER_BUFFER_ORDER : EDGE_BUFFER_ORDER

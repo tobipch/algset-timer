@@ -22,9 +22,14 @@ export default defineConfig({
   optimizeDeps: {
     // Dynamically imported deps: pre-bundle them at server start so the first
     // use in dev doesn't trigger an optimize-and-reload cycle.
-    include: ['exceljs', 'cubing/puzzles']
+    include: ['exceljs', 'cubing/puzzles'],
+    // cubing's search worker uses top-level await (see build.target below).
+    esbuildOptions: { target: 'es2022' }
   },
   build: {
+    // The cubing.js search worker (used by the cycle break trainer to turn a
+    // generated position into a scramble) ships top-level await.
+    target: 'es2022',
     rollupOptions: {
       output: {
         // Split stable vendor code into long-cacheable chunks. cubing and

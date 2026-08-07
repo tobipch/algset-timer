@@ -44,6 +44,11 @@ const chirp = (event) => {
           </router-link>
         </li>
         <li class="nav-item">
+          <router-link class="nav-link" active-class="active" to="/breaks">
+            <i class="bi bi-signpost-split"></i><span class="d-none d-sm-inline"> Breaks</span>
+          </router-link>
+        </li>
+        <li class="nav-item">
           <router-link class="nav-link" active-class="active" to="/" exact-active-class="active">
             <i class="bi bi-table"></i><span class="d-none d-sm-inline"> Übersicht</span>
           </router-link>

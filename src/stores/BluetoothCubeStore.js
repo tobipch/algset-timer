@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia'
 import {ref} from 'vue'
 import {inverseScramble, moveFace, buildMoveRemap} from '@/helpers/scramble_utils'
+import {getKPuzzle} from '@/helpers/kpuzzle'
 import {useDisplayStore} from '@/stores/DisplayStore'
 import {useSettingsStore} from '@/stores/SettingsStore'
 
@@ -9,14 +10,10 @@ import {useSettingsStore} from '@/stores/SettingsStore'
 // kept: the virtual cube starts in the case's pre-alg state (the physical cube
 // can be in any state — only relative moves are tracked), the first move
 // starts the attempt, and reaching the case's solved state ends it.
-
-let kpuzzlePromise = null
-async function getKPuzzle() {
-    if (!kpuzzlePromise) {
-        kpuzzlePromise = import('cubing/puzzles').then(m => m.puzzles['3x3x3'].kpuzzle())
-    }
-    return kpuzzlePromise
-}
+//
+// Besides the timing flow the store publishes every move it sees (lastMove /
+// moveCounter), so other features — the cycle break trainer — can run their own
+// virtual cube off the same connection.
 
 export const useBluetoothCubeStore = defineStore('bluetoothCube', () => {
     const connected = ref(false)
@@ -45,6 +42,12 @@ export const useBluetoothCubeStore = defineStore('bluetoothCube', () => {
 
     // Date.now() of the first move of the running attempt (null when not running)
     const attemptStartedAt = ref(null)
+
+    // Every move the cube reports, already remapped to the user's orientation.
+    // Published for features that track their own virtual cube; the counter is
+    // what to watch, since the same move can come twice in a row.
+    const lastMove = ref(null)
+    const moveCounter = ref(0)
 
     // Internal (not exposed)
     let currentScramble = ''      // pre-alg state as a move string (inverse alg)
@@ -392,12 +395,17 @@ export const useBluetoothCubeStore = defineStore('bluetoothCube', () => {
     }
 
     const onMove = (rawMove) => {
-        if (paused.value) return
-
         // Remap move based on cube orientation setting
         const settings = useSettingsStore()
         const remap = buildMoveRemap(settings.store.cubeOrientation)
         const move = remap ? remap(rawMove) : rawMove
+
+        // Publish first: pausing only concerns the timing flow below, other
+        // features stay in sync with the physical cube either way.
+        lastMove.value = move
+        moveCounter.value++
+
+        if (paused.value) return
 
         if (cubePattern) {
             try { cubePattern = cubePattern.applyMove(move) } catch (_) {}
@@ -495,6 +503,7 @@ export const useBluetoothCubeStore = defineStore('bluetoothCube', () => {
     return {
         connected, deviceName, battery,
         phase, paused, tooFarFromSolved, resetSignal,
+        lastMove, moveCounter,
         lastSolveMs, solveCounter, attemptStartedAt, warmupLibraries,
         connect, disconnect, startTracking, resetTracking,
         pauseTracking, resumeTracking, resetToStart, _getInternals

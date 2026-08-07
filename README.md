@@ -38,10 +38,58 @@ Timer- und Smartcube-Integration orientieren sich an
     „Zuletzt“-Karte (für den Fall „0 angegeben, gleich darauf den Regrip
     bemerkt“) oder jederzeit in der Übersicht per Klick auf die Zahl. Die
     gemessenen Zeiten bleiben dabei unangetastet.
+- **Weggabelung**: Minigame für Cycle-Break-Entscheidungen (siehe unten).
 - **Übersicht**: Tabelle pro Algset, sortierbar nach Case, Zeit, Regrips und Datum.
 - **XLSX-Export**: gleiches Layout und gleiche Formatierung wie das Sheet „UF Times“
   (Grid Spalte=1. Buchstabe / Zeile=2. Buchstabe, Average-Zeile, Best cycle breaks,
   Slowest comms, Total Regrips).
+
+## Weggabelung — Cycle-Break-Training
+
+Ein Minigame für genau die Situationen, in denen man beim Cycle Break frei
+wählen darf, wohin man shootet — und *nicht* floaten kann. Zu finden unter
+**Breaks**.
+
+Eine Runde: die App würfelt eine Stellung mit 4–6 ungelösten Edges, deren erster
+freier Break entweder
+
+- **im ersten Letterpair** liegt (`UF-UB-[BREAK]`, also `A[BREAK]`): das erste
+  Target steht fest, gewählt wird nur der zweite Buchstabe des Commutators, oder
+- **direkt nach dem ersten Letterpair** (`UF-UB-UR [BREAK]`, also `AB [BREAK]`):
+  der Break eröffnet einen neuen Commutator, das zweite Target ergibt sich dann
+  von selbst.
+
+Der Buffer ist dabei immer ungelöst — wäre er es nicht, würde man mit Full
+Floating gar nicht erst breaken. Die Stellungen sind reine Edge-Stellungen (die
+Ecken bleiben stehen), damit nichts vom Thema ablenkt.
+
+**Ablauf mit Smartcube** (dafür ist es gemacht): Cube lösen → Scramble anwenden,
+die App erkennt selbst, wann die Stellung steht → Commutator ausführen. Aus der
+erreichten Stellung liest die App ab, wohin gebreakt wurde, und bewertet. Danach
+den Cube fertig lösen — die nächste Runde startet von selbst. Ohne Cube (oder
+wenn die Erkennung mal danebenliegt, z.B. bei Algs mit Rotationen) lässt sich
+die Wahl auch per Knopf angeben.
+
+**Bewertung**
+
+| | im Letterpair | nach dem Letterpair |
+|---|---|---|
+| Exzellent | einer der 3 schnellsten Comms | Break zum nächsten Buffer der eigenen Reihenfolge |
+| In Ordnung | einer der 7 schnellsten Comms | — |
+| Schwach | alles andere | alles andere |
+
+Die Zeiten kommen aus dem gemessenen Algset; ohne gemessene Zeit für einen Comm
+gilt die Wahl als „nicht bewertbar“ (die Stellungsauswahl bevorzugt deshalb
+Fälle, in denen jede Option eine Zeit hat). Einstellbar ist, woran der Rang im
+Letterpair gemessen wird: an den Breaks, die diese Stellung anbietet
+(Standard), oder an allen gemessenen Comms derselben Spalte — also der
+„Best cycle breaks“-Zeile des Sheets.
+
+Nach dem Letterpair zählt bewusst nicht der schnellste Comm, sondern die
+Buffer-Reihenfolge (Edges `UF, UB, UR, UL, FR, FL, DF, DR, DL`; Ecken `UFR,
+UFL, UBR, UBL, RDF, FDL`, in `src/helpers/letters.js`), weil daraus später eine
+Sandwiching-Situation werden kann. Die durchschnittliche Comm-Geschwindigkeit
+des Pieces steht im Feedback daneben und entscheidet nur bei Gleichstand.
 
 ## Setup
 
