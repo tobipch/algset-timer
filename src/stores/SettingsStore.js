@@ -8,6 +8,12 @@ const defaults = () => ({
     cubeOrientation: '',   // e.g. "z2" if the cube is held white-top-red-front etc.
     skipCompleted: true,   // timing session skips cases that already have a result
     timerUpdate: 'on',     // 'on' | 'seconds' | 'off'
+
+    // Cycle break trainer
+    breakMode: 'mixed',            // 'inPair' | 'afterPair' | 'mixed'
+    breakRatingScope: 'available', // 'available' (rank among the offered breaks)
+                                   // | 'algset' (rank in the whole column)
+    breakShowTargets: true,        // show the forced targets before the break
 })
 
 export const useSettingsStore = defineStore('settings', () => {

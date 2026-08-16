@@ -1,5 +1,15 @@
 import {describe, expect, it} from 'vitest'
-import {letterToSticker, samePiece, stickerToLetter, targetLetters} from './letters'
+import {
+  CORNER_BUFFER_ORDER,
+  EDGE_BUFFER_ORDER,
+  SPEFFZ_CORNERS,
+  SPEFFZ_EDGES,
+  bufferOrderFor,
+  letterToSticker,
+  samePiece,
+  stickerToLetter,
+  targetLetters,
+} from './letters'
 
 describe('letters', () => {
   it('maps stickers to Speffz letters', () => {
@@ -36,5 +46,13 @@ describe('letters', () => {
     expect(letters).not.toContain('C') // UFR
     expect(letters).not.toContain('J') // FUR
     expect(letters).not.toContain('M') // RUF
+  })
+
+  it('names real stickers in both buffer orders', () => {
+    expect(EDGE_BUFFER_ORDER.every((s) => s in SPEFFZ_EDGES)).toBe(true)
+    expect(CORNER_BUFFER_ORDER.every((s) => s in SPEFFZ_CORNERS)).toBe(true)
+    expect(new Set(EDGE_BUFFER_ORDER).size).toBe(EDGE_BUFFER_ORDER.length)
+    expect(bufferOrderFor('edge')).toBe(EDGE_BUFFER_ORDER)
+    expect(bufferOrderFor('corner')).toBe(CORNER_BUFFER_ORDER)
   })
 })

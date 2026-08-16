@@ -6,6 +6,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'overview', component: OverviewView },
     { path: '/timer', name: 'timer', component: () => import('@/views/TimerView.vue') },
+    { path: '/breaks', name: 'breaks', component: () => import('@/views/CycleBreakView.vue') },
     { path: '/algsets', name: 'algsets', component: () => import('@/views/AlgsetsView.vue') },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
