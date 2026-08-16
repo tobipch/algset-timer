@@ -146,3 +146,8 @@ npm run typecheck  # API-Typecheck
   überschreibt nicht, sondern legt ein neues Ergebnis an (das neueste zählt).
 - `cubeOrientation` in den Session-Einstellungen (z.B. `z2`) remappt die
   Cube-Moves, falls der Cube anders gehalten wird als Weiss oben / Grün vorne.
+- Zwei gleichzeitig gedrehte Ebenen dürfen als ein Token geschrieben werden
+  (`DU`, `R2L2`, …). Sie werden intern in normale Moves aufgeteilt (`D U`), denn
+  gegenüberliegende Ebenen sind vertauschbar. Ein Hochkomma bzw. eine `2` nach
+  dem letzten Buchstaben gilt dabei für das ganze Token: `DU'` ist `D' U'`. Pro
+  Buchstabe geschriebene Modifier bleiben, wie sie stehen (`D2U'` = `D2 U'`).

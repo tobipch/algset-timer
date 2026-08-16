@@ -72,16 +72,50 @@ export const expandCommutator = (str) => {
   return result.join(' ')
 }
 
+// One turn inside a token: face (optionally wide), amount, prime.
+const MOVE_PART = /^([UDFBLRMESudfblrxyz]w?)(\d*)('*)/
+
+// Turns of two opposite layers that are done at the same time are written as
+// one token: "DU" is D and U together, "DU'" both the other way round. Split
+// them into ordinary moves ("D U" / "D' U'") — opposite faces commute, so that
+// is the very same alg, and only in that form can it be applied to a virtual
+// cube or inverted. Anything that doesn't read as a run of turns is left alone.
+//
+// This has to happen before an alg is expanded or inverted: the inverse of
+// "DU" is "D' U'", so inverting the token as a whole ("DU'") would flip only
+// the last layer.
+export const splitCompoundMoves = (alg) =>
+  (alg || '').replace(/[A-Za-z0-9']+/g, (word) => {
+    const parts = []
+    let rest = word
+    while (rest.length > 0) {
+      const m = MOVE_PART.exec(rest)
+      if (!m || m[0].length === 0) return word
+      parts.push({ face: m[1], amount: m[2], prime: m[3] })
+      rest = rest.slice(m[0].length)
+    }
+    if (parts.length < 2) return word
+    // A modifier written after the last face belongs to the whole token
+    // ("DU'" = D' U'), one per face is taken as written ("D2U'" = D2 U').
+    const last = parts[parts.length - 1]
+    const distribute =
+      (last.amount || last.prime) && parts.slice(0, -1).every((p) => !p.amount && !p.prime)
+    return parts
+      .map((p) => (distribute ? p.face + last.amount + last.prime : p.face + p.amount + p.prime))
+      .join(' ')
+  })
+
 // The plain move sequence for an alg, expanding commutator notation when
 // present (otherwise the alg as-is). '' if commutator notation is malformed.
 // The expansion is condensed ("[R' B' R: [R D R', U']]" seams as R2, not R R)
 // so setups and playback never show back-to-back same-face moves.
 export const algToMoveString = (alg) => {
-  if (/[[\],:]/.test(alg || '')) {
-    const expanded = expandCommutator(alg)
+  const normalized = splitCompoundMoves(alg)
+  if (/[[\],:]/.test(normalized)) {
+    const expanded = expandCommutator(normalized)
     return expanded === null ? '' : condenseMoves(expanded)
   }
-  return alg || ''
+  return normalized
 }
 
 // Merge adjacent moves of the same base token ("R2 R" -> "R'", "x x'" -> gone;
